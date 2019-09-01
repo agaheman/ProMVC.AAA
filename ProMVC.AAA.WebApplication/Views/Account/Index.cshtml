@@ -1,0 +1,54 @@
+﻿@model IEnumerable<AppUser>
+
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table table-sm table-bordered">
+    <thead>
+        <tr>
+            <th>UserName</th>
+            <th>Email</th>  
+            <th>FullName</th>
+            <th>Id</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Count() == 0)
+        {
+            <tr><td colspan="3" class="text-center">No user account</td></tr>
+        }
+        else
+        {
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>
+                        @user.UserName
+                    </td>
+                    <td>
+                        @user.Email
+                    </td>
+                    <td>
+                        @user.FirstName @user.LastName
+                    </td>
+                    <td>
+                        @user.Id
+                    </td>
+                    <td>
+                        @Html.ActionLink("Edit", "Edit", new { id = user.Id }) |
+                        @Html.ActionLink("Details", "Details", new { id = user.Id }) |
+                        @Html.ActionLink("Delete", "Delete", new { id = user.Id })
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
