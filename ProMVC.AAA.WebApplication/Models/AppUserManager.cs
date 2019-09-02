@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProMVC.AAA.WebApplication.Models
@@ -74,8 +75,25 @@ namespace ProMVC.AAA.WebApplication.Models
             return result;
         }
 
+        public override async Task<IdentityResult> UpdateAsync(AppUser user)
+        {
+            var oldUser = await base.FindByIdAsync(user.Id);
+            var result = await base.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                if (oldUser.PasswordHash != user.PasswordHash)
+                {
+                    await usedPasswordsService.AddToUsedPasswordsListAsync(user);
+                }
+            }
+
+            return result;
+        }
+
         public override async Task<IdentityResult> ChangePasswordAsync(AppUser user, string currentPassword, string newPassword)
         {
+
             var result = await base.ChangePasswordAsync(user, currentPassword, newPassword);
             if (result.Succeeded)
             {

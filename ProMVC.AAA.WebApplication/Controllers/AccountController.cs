@@ -11,13 +11,13 @@ namespace ProMVC.AAA.WebApplication.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<AppUser> userManager;
+        private readonly AppUserManager userManager;
         private readonly SignInManager<AppUser> signInManager;
         private readonly IUserValidator<AppUser> userValidator;
         private readonly IPasswordValidator<AppUser> passwordValidator;
         private readonly IPasswordHasher<AppUser> passwordHasher;
 
-        public AccountController(UserManager<AppUser> userManager,SignInManager<AppUser> signInManager,
+        public AccountController(AppUserManager userManager,SignInManager<AppUser> signInManager,
                                       IUserValidator<AppUser> userValidator,
                                       IPasswordValidator<AppUser> passwordValidator,
                                       IPasswordHasher<AppUser> passwordHasher)
