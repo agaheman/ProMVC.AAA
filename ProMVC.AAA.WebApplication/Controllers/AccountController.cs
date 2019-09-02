@@ -13,11 +13,20 @@ namespace ProMVC.AAA.WebApplication.Controllers
     {
         private readonly UserManager<AppUser> userManager;
         private readonly SignInManager<AppUser> signInManager;
+        private readonly IUserValidator<AppUser> userValidator;
+        private readonly IPasswordValidator<AppUser> passwordValidator;
+        private readonly IPasswordHasher<AppUser> passwordHasher;
 
-        public AccountController(UserManager<AppUser> userManager,SignInManager<AppUser> signInManager)
+        public AccountController(UserManager<AppUser> userManager,SignInManager<AppUser> signInManager,
+                                      IUserValidator<AppUser> userValidator,
+                                      IPasswordValidator<AppUser> passwordValidator,
+                                      IPasswordHasher<AppUser> passwordHasher)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.userValidator = userValidator;
+            this.passwordValidator = passwordValidator;
+            this.passwordHasher = passwordHasher;
         }
 
         [Authorize]
@@ -123,5 +132,84 @@ namespace ProMVC.AAA.WebApplication.Controllers
             ReturnUrl = returnUrl;
             return View();
         }
+
+        [Authorize]
+        public async Task<IActionResult> Edit(string id)
+        {
+            AppUser user = await userManager.FindByIdAsync(id);
+           
+            if (user != null)
+            {
+                UserEditModel userEditModel = new UserEditModel
+                {
+                    Id = user.Id,
+                    NewEmail = user.Email,
+
+                };
+
+                return View(userEditModel);
+            }
+            else
+            {
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> Edit(UserEditModel userEditModel)
+        {
+            AppUser user = await userManager.FindByIdAsync(userEditModel.Id);
+            if (user != null)
+            {
+                user.Email = userEditModel.NewEmail;
+                IdentityResult validEmail = await userValidator.ValidateAsync(userManager, user);
+                if (!validEmail.Succeeded)
+                {
+                    AddErrorsFromResult(validEmail);
+                }
+                IdentityResult validPass = null;
+
+                if (!string.IsNullOrEmpty(userEditModel.NewPassword))
+                {
+                    validPass = await passwordValidator.ValidateAsync(userManager, user, userEditModel.NewPassword);
+                    if (validPass.Succeeded)
+                    {
+                        user.PasswordHash = passwordHasher.HashPassword(user,userEditModel.NewPassword);
+                    }
+                    else
+                    {
+                        AddErrorsFromResult(validPass);
+                    }
+                }
+                if ((validEmail.Succeeded && validPass == null) || (validEmail.Succeeded && userEditModel.NewPassword != string.Empty && validPass.Succeeded))
+                {
+                    IdentityResult result = await userManager.UpdateAsync(user);
+                    if (result.Succeeded)
+                    {
+                        return RedirectToAction("Index");
+                    }
+                    else
+                    {
+                        AddErrorsFromResult(result);
+                    }
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("", "User Not Found");
+            }
+            return View(userEditModel);
+        }
+
+        private void AddErrorsFromResult(IdentityResult result)
+        {
+            foreach (IdentityError error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+        }
+
+
     }
 }

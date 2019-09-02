@@ -8,7 +8,13 @@ namespace ProMVC.AAA.WebApplication.Models
 {
     public class AppUser:IdentityUser
     {
+        public AppUser()
+        {
+            UserUsedPasswords = new HashSet<UserUsedPassword>();
+        }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+
+        public virtual ICollection<UserUsedPassword> UserUsedPasswords { get; set; }
     }
 }
